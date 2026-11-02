@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Seed Layer Switcher</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background:#f6f6f8; color:#222; display:flex; gap:20px; padding:20px; }
+    #viz { width:420px; height:420px; background:linear-gradient(#fff,#eef); border-radius:8px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.08); }
+    .seed { position:relative; width:240px; height:320px; transform:rotate(-6deg); }
+    .layer { position:absolute; left:50%; transform:translateX(-50%); border-radius:50%/60%; transition:all 420ms cubic-bezier(.2,.8,.2,1); }
+    /* layers: seed coat, endosperm, embryo */
+    .coat { width:240px; height:320px; background:linear-gradient(180deg,#8b5e3c,#6f4328); box-shadow:inset 0 -10px 30px rgba(0,0,0,0.12); }
+    .endosperm { width:190px; height:250px; top:30px; background:linear-gradient(180deg,#f7e9b8,#eadb8a); box-shadow:inset 0 -6px 18px rgba(0,0,0,0.08); }
+    .embryo { width:120px; height:160px; top:80px; background:linear-gradient(180deg,#d06,#a03); box-shadow:inset 0 -6px 14px rgba(0,0,0,0.08); }
+    .hidden { opacity:0.06 !important; transform:translateX(-50%) scale(0.88); filter:grayscale(60%); }
+    #controls { max-width:360px; }
+    .row { margin-bottom:12px; }
+    label { display:block; font-size:14px; margin-bottom:6px; }
+    .btn { padding:8px 12px; border-radius:6px; border:1px solid #ccc; background:#fff; cursor:pointer; }
+    .stage-info { font-size:13px; color:#3b3b3b; background:#fff; padding:10px; border-radius:6px; border:1px solid #e6e6ea; }
+    small { color:#666; }
+  </style>
+</head>
+<body>
+  <div id="viz">
+    <div class="seed" aria-hidden="false">
+      <div id="coat" class="layer coat"></div>
+      <div id="endosperm" class="layer endosperm"></div>
+      <div id="embryo" class="layer embryo"></div>
+    </div>
+  </div>
+  <div id="controls">
+    <div class="row">
+      <label>Toggle layers (interpreted from source)</label>
+      <input type="checkbox" id="toggleCoat" checked> <label for="toggleCoat"><small>Seed coat (testa)</small></label><br>
+      <input type="checkbox" id="toggleEndosperm" checked> <label for="toggleEndosperm"><small>Endosperm (stored nutrients)</small></label><br>
+      <input type="checkbox" id="toggleEmbryo" checked> <label for="toggleEmbryo"><small>Embryo</small></label>
+    </div>
+
+    <div class="row">
+      <label>Developmental stage</label>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <button id="prev" class="btn">Prev</button>
+        <button id="next" class="btn">Next</button>
+        <div id="stageLabel" class="btn" style="display:inline-block; min-width:120px; text-align:center;">zygote</div>
+      </div>
+      <div class="stage-info" id="stageInfo">Stage notes appear here.</div>
+    </div>
+
+    <div class="row">
+      <small>Source: "Seed - Wikipedia" (source ID 41e776c5-bfa4-4d45-a2ff-dd0c2ed463e7). Interpretations: layers are nested; stages listed as a schematic sequence. This prototype is illustrative only. <a href="https://en.wikipedia.org/wiki/Seed" target="_blank" rel="noopener noreferrer">Read the source</a></small>
+    </div>
+  </div>
+
+  <script>
+    // Simple state and UI behavior.
+    const coat = document.getElementById('coat');
+    const endo = document.getElementById('endosperm');
+    const emb = document.getElementById('embryo');
+    document.getElementById('toggleCoat').addEventListener('change', e=> coat.classList.toggle('hidden', !e.target.checked));
+    document.getElementById('toggleEndosperm').addEventListener('change', e=> endo.classList.toggle('hidden', !e.target.checked));
+    document.getElementById('toggleEmbryo').addEventListener('change', e=> emb.classList.toggle('hidden', !e.target.checked));
+
+    const stages = [
+      {id:'zygote', note:'Single fertilized cell — earliest stage. (interpretation: starting point)'} ,
+      {id:'proembryo', note:'Early cell divisions form a small proembryo.'},
+      {id:'globular', note:'Rounded embryo shape.'},
+      {id:'heart', note:'Bilateral symmetry appears; cotyledon primordia visible.'},
+      {id:'torpedo', note:'Elongated axis; embryo elongates.'},
+      {id:'mature', note:'Mature embryo with stored reserves in endosperm.'}
+    ];
+    let idx = 0;
+    const label = document.getElementById('stageLabel');
+    const info = document.getElementById('stageInfo');
+    function renderStage() {
+      const s = stages[idx];
+      label.textContent = s.id;
+      info.textContent = s.note;
+      // visual hints: embryo size and position change with stage
+      const scaleMap = {zygote:0.4, proembryo:0.6, globular:0.9, heart:1.0, torpedo:1.12, mature:1.0};
+      const scale = scaleMap[s.id] || 1.0;
+      emb.style.width = (120*scale) + 'px';
+      emb.style.height = (160*scale) + 'px';
+      emb.style.top = (80 - (20*(scale-1))) + 'px';
+      // endosperm more or less prominent at different stages
+      const endoOpacity = {zygote:0.9, proembryo:0.95, globular:0.85, heart:0.8, torpedo:0.7, mature:0.6}[s.id];
+      endo.style.opacity = endoOpacity;
+    }
+    document.getElementById('prev').addEventListener('click', ()=>{ idx = Math.max(0, idx-1); renderStage(); });
+    document.getElementById('next').addEventListener('click', ()=>{ idx = Math.min(stages.length-1, idx+1); renderStage(); });
+    renderStage();
+  </script>
+</body>
+</html>
